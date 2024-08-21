@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 
 def plot_spectrum(picos, graph_color):
     x_total = np.arange(0, 15.001, 0.001)
@@ -14,16 +14,20 @@ def plot_spectrum(picos, graph_color):
         y_lorentziana[mask] = intensidade / (1 + ((x_total[mask] - centro) / 0.001)**2)
         y_total += y_lorentziana
 
-    # Criar o gráfico
-    plt.figure(figsize=(8, 6))
-    plt.plot(x_total, y_total, color=graph_color)
-    plt.xlim(15, 0)  # Inverter o eixo x
-    plt.xlabel("Deslocamento Químico (ppm)")
-    plt.ylabel("Intensidade")
-    plt.xticks(np.arange(0, 16, 2))  # Ajustar ticks no eixo x
-    plt.yticks(np.arange(0, max(y_total)+200, 200))  # Ajustar ticks no eixo y
-    plt.grid(True)
-    st.pyplot(plt)
+    # Criar o gráfico com Plotly
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(x=x_total, y=y_total, mode='lines', line=dict(color=graph_color)))
+
+    fig.update_layout(
+        xaxis=dict(title='Deslocamento Químico (ppm)', range=[15, 0], showgrid=True, ticks='outside'),
+        yaxis=dict(title='Intensidade', showgrid=True, ticks='outside'),
+        plot_bgcolor='white',
+        showlegend=False,
+        margin=dict(l=40, r=40, t=20, b=40)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 # Streamlit Interface
 st.title('Gerador de Espectro de RMN com Integração de Picos')
