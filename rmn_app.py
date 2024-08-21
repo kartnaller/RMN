@@ -3,7 +3,6 @@ import numpy as np
 import plotly.graph_objs as go
 import matplotlib.pyplot as plt
 from io import BytesIO
-import pyperclip
 
 def plot_spectrum(picos, graph_color, x_range=None):
     x_total = np.arange(0, 15.001, 0.001)
@@ -90,17 +89,12 @@ if picos:
     plotly_chart = st.plotly_chart(fig, use_container_width=True)
 
     # Botão para capturar a imagem do gráfico
-    if st.button("Copiar gráfico como imagem"):
+    if st.button("Gerar imagem para download"):
         try:
             x_range = fig.layout.xaxis.range  # Capturar a área de zoom atual
             img_buf = create_matplotlib_plot(x_total, y_total, graph_color, x_range=x_range)
-            
-            # Copiar para o clipboard (local)
-            img = plt.imread(img_buf)
-            pyperclip.copy(img)
-            
+            st.image(img_buf, caption="Gráfico gerado")
             st.download_button(label="Baixar imagem", data=img_buf, file_name="grafico_rmn.png", mime="image/png")
-            st.success("Gráfico copiado para a área de transferência!")
             
         except Exception as e:
             st.error(f"Erro ao gerar a imagem: {e}")
