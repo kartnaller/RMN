@@ -3,6 +3,7 @@ import numpy as np
 import plotly.graph_objs as go
 import matplotlib.pyplot as plt
 from io import BytesIO
+import pyperclip
 
 def plot_spectrum(picos, graph_color, x_range=None):
     x_total = np.arange(0, 15.001, 0.001)
@@ -35,11 +36,17 @@ def plot_spectrum(picos, graph_color, x_range=None):
 def create_matplotlib_plot(x_total, y_total, graph_color, x_range=None):
     fig, ax = plt.subplots()
     ax.plot(x_total, y_total, color=graph_color)
-    ax.set_xlim(x_range if x_range else (15, 0))  # Aplicar o zoom capturado no matplotlib
+    
+    if x_range:
+        ax.set_xlim(x_range[1], x_range[0])  # Aplicar o zoom capturado, invertido
+    else:
+        ax.set_xlim(15, 0)  # Default
+    
     ax.set_xlabel("Deslocamento Químico (ppm)")
     ax.set_ylabel("Intensidade")
     ax.grid(True)
     ax.tick_params(direction='in', length=6, width=2)
+    
     buf = BytesIO()
     plt.savefig(buf, format='png')
     buf.seek(0)
@@ -87,6 +94,13 @@ if picos:
         try:
             x_range = fig.layout.xaxis.range  # Capturar a área de zoom atual
             img_buf = create_matplotlib_plot(x_total, y_total, graph_color, x_range=x_range)
+            
+            # Copiar para o clipboard (local)
+            img = plt.imread(img_buf)
+            pyperclip.copy(img)
+            
             st.download_button(label="Baixar imagem", data=img_buf, file_name="grafico_rmn.png", mime="image/png")
+            st.success("Gráfico copiado para a área de transferência!")
+            
         except Exception as e:
             st.error(f"Erro ao gerar a imagem: {e}")
