@@ -23,7 +23,7 @@ def plot_spectrum(picos, graph_color, x_range=None):
 
     # Invertendo o eixo x
     fig.update_layout(
-        xaxis=dict(title='Deslocamento Químico (ppm)', range=[15, 0], showgrid=True, ticks='outside'),
+        xaxis=dict(title='Deslocamento Químico (ppm)', range=x_range if x_range else [15, 0], showgrid=True, ticks='outside'),
         yaxis=dict(title='Intensidade', showgrid=True, ticks='outside'),
         plot_bgcolor='white',
         showlegend=False,
@@ -35,7 +35,7 @@ def plot_spectrum(picos, graph_color, x_range=None):
 def create_matplotlib_plot(x_total, y_total, graph_color, x_range=None):
     fig, ax = plt.subplots()
     ax.plot(x_total, y_total, color=graph_color)
-    ax.set_xlim(x_range if x_range else (15, 0))  # Manter o eixo invertido no matplotlib
+    ax.set_xlim(x_range if x_range else (15, 0))  # Aplicar o zoom capturado no matplotlib
     ax.set_xlabel("Deslocamento Químico (ppm)")
     ax.set_ylabel("Intensidade")
     ax.grid(True)
