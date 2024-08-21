@@ -32,15 +32,12 @@ def plot_spectrum(picos, graph_color, x_range=None):
 
     return fig, x_total, y_total
 
-def create_matplotlib_plot(x_total, y_total, graph_color, x_range=None):
+def create_matplotlib_plot(x_total, y_total, graph_color, x_range):
     fig, ax = plt.subplots()
     ax.plot(x_total, y_total, color=graph_color)
     
-    if x_range:
-        # Aplicar o zoom capturado no gráfico Matplotlib
-        ax.set_xlim(x_range[0], x_range[1])  # Invertendo o range
-    else:
-        ax.set_xlim(15, 0)  # Default
+    # Aplicar o zoom capturado no gráfico Matplotlib
+    ax.set_xlim(x_range[0], x_range[1])  # Respeitar o zoom aplicado no Plotly
     
     ax.set_xlabel("Deslocamento Químico (ppm)")
     ax.set_ylabel("Intensidade")
@@ -93,7 +90,10 @@ if picos:
     if st.button("Gerar imagem para download"):
         try:
             x_range = fig.layout.xaxis.range  # Capturar a área de zoom atual
-            img_buf = create_matplotlib_plot(x_total, y_total, graph_color, x_range=x_range)
+            if x_range is None:
+                x_range = [15, 0]  # Caso nenhum zoom tenha sido aplicado
+            
+            img_buf = create_matplotlib_plot(x_total, y_total, graph_color, x_range)
             st.image(img_buf, caption="Gráfico gerado")
             st.download_button(label="Baixar imagem", data=img_buf, file_name="grafico_rmn.png", mime="image/png")
             
