@@ -21,8 +21,9 @@ def plot_spectrum(picos, graph_color, x_range=None):
 
     fig.add_trace(go.Scatter(x=x_total, y=y_total, mode='lines', line=dict(color=graph_color)))
 
+    # Invertendo o eixo x
     fig.update_layout(
-        xaxis=dict(title='Deslocamento Químico (ppm)', range=x_range, showgrid=True, ticks='outside'),
+        xaxis=dict(title='Deslocamento Químico (ppm)', range=[15, 0], showgrid=True, ticks='outside'),
         yaxis=dict(title='Intensidade', showgrid=True, ticks='outside'),
         plot_bgcolor='white',
         showlegend=False,
@@ -34,7 +35,7 @@ def plot_spectrum(picos, graph_color, x_range=None):
 def create_matplotlib_plot(x_total, y_total, graph_color, x_range=None):
     fig, ax = plt.subplots()
     ax.plot(x_total, y_total, color=graph_color)
-    ax.set_xlim(x_range if x_range else (15, 0))
+    ax.set_xlim(x_range if x_range else (15, 0))  # Manter o eixo invertido no matplotlib
     ax.set_xlabel("Deslocamento Químico (ppm)")
     ax.set_ylabel("Intensidade")
     ax.grid(True)
@@ -83,6 +84,9 @@ if picos:
 
     # Botão para capturar a imagem do gráfico
     if st.button("Copiar gráfico como imagem"):
-        x_range = plotly_chart._last_figure_json['layout']['xaxis']['range']  # Capturar a área de zoom atual
-        img_buf = create_matplotlib_plot(x_total, y_total, graph_color, x_range=x_range)
-        st.download_button(label="Baixar imagem", data=img_buf, file_name="grafico_rmn.png", mime="image/png")
+        try:
+            x_range = fig.layout.xaxis.range  # Capturar a área de zoom atual
+            img_buf = create_matplotlib_plot(x_total, y_total, graph_color, x_range=x_range)
+            st.download_button(label="Baixar imagem", data=img_buf, file_name="grafico_rmn.png", mime="image/png")
+        except Exception as e:
+            st.error(f"Erro ao gerar a imagem: {e}")
