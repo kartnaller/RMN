@@ -1,8 +1,10 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objs as go
+import matplotlib.pyplot as plt
+from io import BytesIO
 
-def plot_spectrum(picos, graph_color):
+def plot_spectrum(picos, graph_color, x_range=None):
     x_total = np.arange(0, 15.001, 0.001)
     y_total = np.zeros_like(x_total)
 
@@ -20,14 +22,27 @@ def plot_spectrum(picos, graph_color):
     fig.add_trace(go.Scatter(x=x_total, y=y_total, mode='lines', line=dict(color=graph_color)))
 
     fig.update_layout(
-        xaxis=dict(title='Deslocamento Químico (ppm)', range=[15, 0], showgrid=True, ticks='outside'),
+        xaxis=dict(title='Deslocamento Químico (ppm)', range=x_range, showgrid=True, ticks='outside'),
         yaxis=dict(title='Intensidade', showgrid=True, ticks='outside'),
         plot_bgcolor='white',
         showlegend=False,
         margin=dict(l=40, r=40, t=20, b=40)
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    return fig, x_total, y_total
+
+def create_matplotlib_plot(x_total, y_total, graph_color, x_range=None):
+    fig, ax = plt.subplots()
+    ax.plot(x_total, y_total, color=graph_color)
+    ax.set_xlim(x_range if x_range else (15, 0))
+    ax.set_xlabel("Deslocamento Químico (ppm)")
+    ax.set_ylabel("Intensidade")
+    ax.grid(True)
+    ax.tick_params(direction='in', length=6, width=2)
+    buf = BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    return buf
 
 # Streamlit Interface
 st.title('Gerador de Espectro de RMN com Integração de Picos')
@@ -61,6 +76,13 @@ color_options = {
 color_choice = st.selectbox("Escolha a cor do gráfico", options=list(color_options.keys()), index=0)
 graph_color = color_options[color_choice]
 
-# Plotar o espectro
+# Plotar o espectro com Plotly
 if picos:
-    plot_spectrum(picos, graph_color)
+    fig, x_total, y_total = plot_spectrum(picos, graph_color)
+    plotly_chart = st.plotly_chart(fig, use_container_width=True)
+
+    # Botão para capturar a imagem do gráfico
+    if st.button("Copiar gráfico como imagem"):
+        x_range = plotly_chart._last_figure_json['layout']['xaxis']['range']  # Capturar a área de zoom atual
+        img_buf = create_matplotlib_plot(x_total, y_total, graph_color, x_range=x_range)
+        st.download_button(label="Baixar imagem", data=img_buf, file_name="grafico_rmn.png", mime="image/png")
