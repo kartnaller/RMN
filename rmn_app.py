@@ -1,10 +1,8 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objs as go
-import matplotlib.pyplot as plt
-from io import BytesIO
 
-def plot_spectrum(picos, graph_color, x_range=None):
+def plot_spectrum(picos, graph_color):
     x_total = np.arange(0, 15.001, 0.001)
     y_total = np.zeros_like(x_total)
 
@@ -19,35 +17,36 @@ def plot_spectrum(picos, graph_color, x_range=None):
     # Criar o gráfico com Plotly
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(x=x_total, y=y_total, mode='lines', line=dict(color=graph_color)))
+    fig.add_trace(go.Scatter(
+        x=x_total, 
+        y=y_total, 
+        mode='lines', 
+        line=dict(color=graph_color, width=2)
+    ))
 
-    # Invertendo o eixo x e aplicando zoom
+    # Customizar a aparência
     fig.update_layout(
-        xaxis=dict(title='Deslocamento Químico (ppm)', range=x_range if x_range else [15, 0], showgrid=True, ticks='outside'),
-        yaxis=dict(title='Intensidade', showgrid=True, ticks='outside'),
-        plot_bgcolor='white',
+        plot_bgcolor='white',  # Fundo branco
+        xaxis=dict(
+            title='Deslocamento Químico (ppm)', 
+            range=[15, 0], 
+            ticks='outside', 
+            showline=True, 
+            linecolor='black', 
+            tickcolor='black'
+        ),
+        yaxis=dict(
+            title='Intensidade', 
+            ticks='outside', 
+            showline=True, 
+            linecolor='black', 
+            tickcolor='black'
+        ),
         showlegend=False,
         margin=dict(l=40, r=40, t=20, b=40)
     )
 
-    return fig, x_total, y_total
-
-def create_matplotlib_plot(x_total, y_total, graph_color, x_range):
-    fig, ax = plt.subplots()
-    ax.plot(x_total, y_total, color=graph_color)
-    
-    # Aplicar o zoom capturado no gráfico Matplotlib
-    ax.set_xlim(x_range[0], x_range[1])  # Respeitar o zoom aplicado no Plotly
-    
-    ax.set_xlabel("Deslocamento Químico (ppm)")
-    ax.set_ylabel("Intensidade")
-    ax.grid(True)
-    ax.tick_params(direction='in', length=6, width=2)
-    
-    buf = BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    return buf
+    return fig
 
 # Streamlit Interface
 st.title('Gerador de Espectro de RMN com Integração de Picos')
@@ -83,19 +82,5 @@ graph_color = color_options[color_choice]
 
 # Plotar o espectro com Plotly
 if picos:
-    fig, x_total, y_total = plot_spectrum(picos, graph_color)
-    plotly_chart = st.plotly_chart(fig, use_container_width=True)
-
-    # Botão para capturar a imagem do gráfico
-    if st.button("Gerar imagem para download"):
-        try:
-            x_range = fig.layout.xaxis.range  # Capturar a área de zoom atual
-            if x_range is None:
-                x_range = [15, 0]  # Caso nenhum zoom tenha sido aplicado
-            
-            img_buf = create_matplotlib_plot(x_total, y_total, graph_color, x_range)
-            st.image(img_buf, caption="Gráfico gerado")
-            st.download_button(label="Baixar imagem", data=img_buf, file_name="grafico_rmn.png", mime="image/png")
-            
-        except Exception as e:
-            st.error(f"Erro ao gerar a imagem: {e}")
+    fig = plot_spectrum(picos, graph_color)
+    st.plotly_chart(fig, use_container_width=True)
